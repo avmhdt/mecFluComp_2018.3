@@ -4,6 +4,8 @@
 #define N 400
 #define EX 1
 
+void analytics();
+
 void firstorder();
 
 void thirdorder();
@@ -15,9 +17,31 @@ void init(double u[N], double* tf, double dx);
 void printResults(double u[N], char filename[], int t);
 
 int main(){
+  analytics();
   firstorder();
   thirdorder();
   return 0;
+}
+
+void analytics(){
+  double u[N], u0[N];
+  double a = 1;
+  double dt = 0.00025; //0.00025
+  double dx = 0.005;
+  double x, t, tf;
+  int i, j;
+
+  init(u0, &tf, dx);
+
+  for(i = 1, t = dt; t < tf; i++){
+    t = i*dt;
+    for(j = 1; j < N-1; j++){
+      x = (EX == 2 ? j*dx-1 : j*dx);
+      u[j] = u0[j]*(x - a*t);
+    }
+    printResults(u, "resultsA.txt", i);
+  }
+  printf("Finish at t = %.2f\n", t-dt);
 }
 
 void firstorder(){
@@ -31,13 +55,13 @@ void firstorder(){
   init(u, &tf, dx);
 
   //main loop
-  for(i = 1, t = dt; t < 1; i++){
+  for(i = 1, t = dt; t < tf; i++){
     for(j = 0; j < N; j++){
       up[j] = u[j];
     }
     t = i*dt;
     for(j = 1; j < N-1; j++){
-      x = j*dx;
+      //x = (EX == 2 ? j*dx-1 : j*dx);
       u[j] = up[j]-(dt*a/dx)*(up[j]-up[j-1]);
     }
     printResults(u, "resultsFOU.txt", i);
@@ -58,7 +82,7 @@ void thirdorder(){
   init(u, &tf, dx);
 
   //main loop
-  for(i = 1, t = dt; t < 1; i++){
+  for(i = 1, t = dt; t < tf; i++){
     for(j = 0; j < N; j++){
       up[j] = u[j];
     }
@@ -68,7 +92,7 @@ void thirdorder(){
     uf = calcUf(up, 1);
     for(j = 2; j < N-1; j++){
       //for each x
-      x = j*dx;
+      //x = (EX == 2 ? j*dx-1 : j*dx);
       ug = uf;
       uf = calcUf(up, j);
       u[j] = up[j]-(dt*a/dx)*(uf-ug);
@@ -135,9 +159,9 @@ void init(double u[N], double* tf, double dx){
       } else if(1 <= x && x <= 1.2){
         u[i] = 1;
       } else if(1.2 < x && x <= 1.4){
-        u[i] = 4*x-0.6;
+        u[i] = 4*(x-1)-0.6;
       } else if(1.4 < x && x <= 1.6){
-        u[i] = (-4)*x+2.6;
+        u[i] = (-4)*(x-1)+2.6;
       } else if(1.6 < x && x <= 1.8){
         u[i] = 1;
       } else {
