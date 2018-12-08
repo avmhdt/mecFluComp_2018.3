@@ -2,7 +2,7 @@
 #include<math.h>
 
 #define N 400
-#define EX 1
+#define EX 2
 
 void analytics();
 
@@ -14,6 +14,8 @@ double calcUf(double U[N], int i);
 
 void init(double u[N], double* tf, double dx);
 
+double u0(double x);
+
 void printResults(double u[N], char filename[], int t);
 
 int main(){
@@ -24,22 +26,26 @@ int main(){
 }
 
 void analytics(){
-  double u[N], u0[N];
+  double u[N];
   double a = 1;
   double dt = 0.00025; //0.00025
   double dx = 0.005;
   double x, t, tf;
   int i, j;
 
-  init(u0, &tf, dx);
+  init(u, &tf, dx);
 
   for(i = 1, t = dt; t < tf; i++){
     t = i*dt;
     for(j = 1; j < N-1; j++){
-      x = (EX == 2 ? j*dx-1 : j*dx);
-      u[j] = u0[j]*(x - a*t);
+      x = j*dx;//(EX == 2 ? j*dx-1 : j*dx);
+      u[j] = u0(x - a*t);
     }
-    printResults(u, "resultsA.txt", i);
+    if(EX == 1){
+      printResults(u, "resultsA1.txt", i);
+    } else {
+      printResults(u, "resultsA2.txt", i);
+    }
   }
   printf("Finish at t = %.2f\n", t-dt);
 }
@@ -64,7 +70,11 @@ void firstorder(){
       //x = (EX == 2 ? j*dx-1 : j*dx);
       u[j] = up[j]-(dt*a/dx)*(up[j]-up[j-1]);
     }
-    printResults(u, "resultsFOU.txt", i);
+    if(EX == 1){
+      printResults(u, "resultsFOU1.txt", i);
+    } else {
+      printResults(u, "resultsFOU2.txt", i);
+    }
   }
   printf("Finish at t = %.2f\n", t-dt);
 }
@@ -97,7 +107,11 @@ void thirdorder(){
       uf = calcUf(up, j);
       u[j] = up[j]-(dt*a/dx)*(uf-ug);
     }
-    printResults(u, "resultsTOPUS.txt", i);
+    if(EX == 1){
+      printResults(u, "resultsTOPUS1.txt", i);
+    } else {
+      printResults(u, "resultsTOPUS2.txt", i);
+    }
   }
   printf("Finish at t = %.2f\n", t-dt);
 }
@@ -136,43 +150,53 @@ void init(double u[N], double* tf, double dx){
   if(EX == 1){
     for(i = 0; i < N; i++){
       x = i*dx;
-      if(x < 0.2){
-        u[i] = exp(-log(50)*pow((x-0.15)/0.05, 2));
-      } else if(0.3 < x && x < 0.4){
-        u[i] = 1;
-      } else if(0.5 < x && x < 0.55){
-        u[i] = 20*x-10;
-      } else if(0.55 <= x && x < 0.66){
-        u[i] = -20*x+12;
-      } else if(0.7 < x && x < 0.8){
-        u[i] = sqrt(1-pow((x-0.75)/0.05, 2));
-      } else {
-        u[i] = 0;
-      }
+      u[i] = u0(x);
     }
     *tf = 1;
   } else {
     for(i = 0; i < N; i++){
       x = i*dx;
-      if(x < 1){
-        u[i] = 0;
-      } else if(1 <= x && x <= 1.2){
-        u[i] = 1;
-      } else if(1.2 < x && x <= 1.4){
-        u[i] = 4*(x-1)-0.6;
-      } else if(1.4 < x && x <= 1.6){
-        u[i] = (-4)*(x-1)+2.6;
-      } else if(1.6 < x && x <= 1.8){
-        u[i] = 1;
-      } else {
-        u[i] = 0;
-      }
+      u[i] = u0(x);
     }
     *tf = 0.25;
   }
 
   //boundary conditions
   u[0] = u[N-1] = 0;
+}
+
+double u0(double x){
+  double r;
+  if(EX == 1){
+    if(x < 0.2){
+      r = exp(-log(50)*pow((x-0.15)/0.05, 2));
+    } else if(0.3 < x && x < 0.4){
+      r = 1;
+    } else if(0.5 < x && x < 0.55){
+      r = 20*x-10;
+    } else if(0.55 <= x && x < 0.66){
+      r = -20*x+12;
+    } else if(0.7 < x && x < 0.8){
+      r = sqrt(1-pow((x-0.75)/0.05, 2));
+    } else {
+      r = 0;
+    }
+  } else {
+    if(x < 1){
+      r = 0;
+    } else if(1 <= x && x <= 1.2){
+      r = 1;
+    } else if(1.2 < x && x <= 1.4){
+      r = 4*(x-1)-0.6;
+    } else if(1.4 < x && x <= 1.6){
+      r = (-4)*(x-1)+2.6;
+    } else if(1.6 < x && x <= 1.8){
+      r = 1;
+    } else {
+      r = 0;
+    }
+  }
+  return r;
 }
 
 void printVTK(double u[N], int t){
